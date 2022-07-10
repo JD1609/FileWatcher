@@ -1,0 +1,42 @@
+﻿.main {
+    text-align: center;
+}
+
+.index-content {
+    text-align: center;
+    align-content: center;
+}
+
+.input {
+    margin: auto;
+    align-content: center;
+    text-align: left;
+    width: 40%;
+}
+
+.status-msg {
+    font-size: smaller;
+}
+
+.table {
+    margin: auto;
+    width: 50%;
+    text-align: left;
+    align-content: center;
+}
+
+.item-operation-title {
+    font-weight: bold;
+}
+
+.created-item {
+    color: green;
+}
+
+.changed-item {
+    color: dodgerblue;
+}
+
+.deleted-item {
+    color: red;
+}

@@ -17,7 +17,7 @@ namespace SourceWatcher.Controllers
 
 
         [HttpPost("set-path")]
-        public ActionResult<RequestResponse<string>> SetPath(string path)
+        public ActionResult<RequestResponse<string>> SetPath([FromBody] string path)
         {
             var response = _fileTrackerService.SetPath(path);
 
@@ -25,10 +25,10 @@ namespace SourceWatcher.Controllers
         }
 
 
-        [HttpGet("get-changes")]
-        public ActionResult<RequestResponse<List<ChangeData>>> GetChanges()
+        [HttpPost("get-changes")]
+        public ActionResult<RequestResponse<List<ChangeData>>> GetChanges([FromBody] DateTime? getFrom)
         {
-            var response = _fileTrackerService.GetChanges();
+            var response = _fileTrackerService.GetChanges(getFrom);
 
             return Ok(response);
         }

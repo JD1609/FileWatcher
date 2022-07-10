@@ -1,9 +1,133 @@
 ﻿@page "/"
+@inject ILocalStorageService LocalStorage
+@inject IFileTrackerService FileTrackerService
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Change tracker</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="main">
+    <h1>Change tracker</h1>
+    <br />
 
-Welcome to your new app.
+    
+    <div class="mb-3 index-content">
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+        <EditForm Model="Path" OnSubmit="SetPath">
+            <div class="input">
+                <label>Path to track:</label>
+                
+                <div class="input-group">
+                    <InputText id="search" @bind-Value="Path" class="form-control" />
+
+                    <button type="submit" class="btn btn-primary">
+                        <span class="oi oi-magnifying-glass" />
+                    </button>
+                </div>
+
+                <div class="status-msg @MessageCssClass">
+                    <span>@Message</span>
+                </div>
+            </div>
+        </EditForm>
+
+        <br />
+        <br />
+
+        <div>
+            @if (Changes.Count > 0)
+            {
+                <table class="table">
+                    <tr>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>File/folder</th>
+                    </tr>
+
+                    @foreach(var change in Changes.OrderBy(c => c.EventTime))
+                    {
+                        <tr>
+                            <td class="item-operation-title @GetItemClass(change.EventName)">@change.EventName</td>
+                            <td>@change.EventTime</td>
+                            <td>@change.FullPath</td>
+                        </tr>
+                    }
+                </table>
+            }
+            else
+            {
+                <p>No changes...</p>
+            }
+
+            <div class="mt-5">
+                <button type="submit" class="btn btn-primary" @onclick="Load">
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string Path = string.Empty;
+    private List<ChangeData> Changes = new List<ChangeData>();
+
+    private string MessageCssClass = string.Empty;
+    private string Message = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        Changes = await LocalStorage.GetItemAsync<List<ChangeData>>("changes") ?? new List<ChangeData>();
+        var localStorageLastUpdate = await LocalStorage.GetItemAsync<DateTime?>("lastUpdate") ?? DateTime.Now;
+
+
+        var result = await FileTrackerService.GetChanges(localStorageLastUpdate);
+
+        Changes = result.Data ?? new List<ChangeData>();
+
+        var newestChange = Changes.Count > 0 ? Changes
+                                                .OrderByDescending(ch => ch.EventTime)
+                                                .Select(ch => ch.EventTime)
+                                                .First() : localStorageLastUpdate;
+
+        await LocalStorage.SetItemAsync("changes", Changes);
+        await LocalStorage.SetItemAsync("lastUpdate", newestChange);
+    }
+
+    private async Task SetPath()
+    {
+        var result = await FileTrackerService.SetPath(Path);
+
+
+        if (result.Success)
+        {
+            Message = $"*{result.Data}";
+            MessageCssClass = "text-success";
+        }
+        else
+        {
+            Message = $"*{result.ErrorMessage.Replace("(Parameter 'Path')", string.Empty)}";
+            MessageCssClass = "text-danger";
+        }
+    }
+    #region ItemClass
+    private string GetItemClass(string changeType)
+    {
+        if (changeType == "Created")
+            return "created-item";
+
+        if (changeType == "Changed")
+            return "changed-item";
+
+        if (changeType == "Deleted")
+            return "deleted-item";
+
+
+        return string.Empty;
+    }
+    #endregion
+}

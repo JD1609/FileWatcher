@@ -12,24 +12,40 @@
         }
 
 
-        public RequestResponse<List<ChangeData>> GetChanges()
+        public RequestResponse<List<ChangeData>> GetChanges(DateTime? getFrom)
         {
+            var changes = getFrom != null ? _changes
+                                                .Where(ch => ch.EventTime > getFrom)
+                                                .ToList() : _changes;
+
             return new RequestResponse<List<ChangeData>>
             {
-                Data = _changes
+                Data = changes
             };
         }
 
 
         public RequestResponse<string> SetPath(string path)
         {
-            _fileWatcher.Path = path.Replace("/", "\\");
-            _fileWatcher.EnableRaisingEvents = true;
+            var response = new RequestResponse<string>();
 
-            return new RequestResponse<string>
+            try
             {
-                Data = $"Path [{path}] successfully set.",
-            };
+                _fileWatcher.Path = path.Replace("/", "\\");
+                _fileWatcher.EnableRaisingEvents = true;
+
+                response.Data = $"Path successfully set ({path}).";
+
+                Console.WriteLine($"Path: {path}");
+            }
+            catch (Exception e)
+            {
+                response.Success = false;
+                response.ErrorMessage = e.Message;
+            }
+
+
+            return response;
         }
     }
 }

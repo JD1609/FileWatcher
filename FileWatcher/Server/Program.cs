@@ -1,4 +1,4 @@
-global using FileWatcher.Server.Data;
+global using FileWatcher.Shared.Data;
 global using FileWatcher.Server.Services;
 global using FileWatcher.Shared;
 using FileWatcher.Server;
